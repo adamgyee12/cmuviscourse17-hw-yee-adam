@@ -29,6 +29,24 @@
       stroke: black;
       stroke-width: .05;
     }
+    .outlines:hover {
+      fill:none;
+    }
+    rect:hover {
+      fill:green;
+      transition: fill .1s ease;
+    }
+    circle:hover {
+      fill:green;
+      transition: fill .1s ease;
+    }
+    .left-column-header {
+      float: left;
+      margin: 0 220px 0 0;
+    }
+    .right-column-header {
+      display: inline;
+    }
   </style>
 </head>
 <body>
@@ -36,7 +54,8 @@
   <h1>Visualization in HCI Homework 1</h1>
   <h2>Adam Yee (adamy@andrew.cmu.edu)</h2>
   <br/><br/>
-  <h3>Bar Charts (X's on Left, Y's on Right)</h3>
+  <h3 class="left-column-header">Bar Chart (X Values)</h3>
+  <h3 class="right-column-header">Bar Chart (Y Values)</h3>
 
   <svg display="block" width="800" height="400">
 
@@ -55,6 +74,7 @@
     <rect x="0" y="10" width="5" height="1"/>
   </g>
 
+
   <!--Bar Chart of Y dimension-->
   <g class="bar-chart-data" transform="translate(400,250) scale(20,-20)">
     <rect x="0" y="0" width="8.04" height="1"/>
@@ -71,9 +91,10 @@
   </g>
   </svg>
 
-  <h3>Line Charts (X's on Left, Y's on Right)</h3>
+  <h3 class="left-column-header">Line Chart (X Value)</h3>
+  <h3 class="right-column-header">Line Chart (Y Value)</h3>
 
-  <svg width="800" height="400">
+  <svg display="block" width="800" height="400">
 
   <!--Line Chart of X dimension, created with path elements-->
   <g class="line-chart-data" transform="translate(10,300) scale(20,-20)">
@@ -95,9 +116,11 @@
   </g>
   </svg>
 
-  <h3>Area Charts (X's on Left, Y's on Right)</h3>
+  <h3 class="left-column-header">Area Chart (X Value)</h3>
+  <h3 class="right-column-header">Area Chart (Y Value)</h3>
 
-  <svg width="800" height="500">
+
+  <svg display="block" width="800" height="500">
 
   <!--Area Chart of X dimension, created with path elements-->
   <g class="area-chart-data" transform="translate(10,300) scale(20,-20)">
