@@ -12,14 +12,7 @@ function updateBarChart(selectedDimension) {
         xAxisWidth = 100,
         yAxisHeight = 70;
 
-    var svg = d3.select("#barChart")
-      .attr("style", "backgroundColor: blue");
-      console.log(svg);
-    var width = 500;
-    var height = 400;
     var padding = 3;
-
-    console.log(svgBounds);
 
     var data = [];
     var years = [];
@@ -27,8 +20,6 @@ function updateBarChart(selectedDimension) {
       data.unshift(allWorldCupData[i][selectedDimension]);
       years.unshift(allWorldCupData[i]["year"]);
     }
-    console.log(data);
-    console.log(years);
 
     // ******* TODO: PART I *******
     var spacing = svgBounds["width"] / data.length;
@@ -125,6 +116,9 @@ function updateBarChart(selectedDimension) {
       })
       .attr("width", 17)
       .merge(bars)
+      .on("click", function(d,i){
+        console.log("Year: " + years[i] + ", Value: " + data[i]);
+      })
       .attr("transform", "translate(70, 20)")
       .transition().duration(2500)
       .attr("x", function (d, i) {
@@ -136,7 +130,6 @@ function updateBarChart(selectedDimension) {
       })
       .attr("width", 17)
       .attr("height", function(d,i){
-          console.log(d);
           return svgBounds["height"] - yScale(data[i]) - yAxisHeight;
       })
       .attr("fill", function (d,i) {
