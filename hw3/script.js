@@ -15,6 +15,106 @@ function updateBarChart(selectedDimension) {
 
     // ******* TODO: PART I *******
     // Copy over your HW2 code here
+
+        var padding = 3;
+
+        var data = [];
+        var years = [];
+        var orderedCupData = [];
+        for (var i = 0; i < allWorldCupData.length; i++){
+          data.unshift(allWorldCupData[i][selectedDimension]);
+          years.unshift(allWorldCupData[i]["year"]);
+          orderedCupData.unshift(allWorldCupData[i]);
+        }
+
+        // ******* TODO: PART I *******
+        var spacing = svgBounds["width"] / data.length;
+        // Create the x and y scales; make
+        // sure to leave room for the axes
+
+        // wanna use a categorical scale instead of linear!!
+        // banded scale: d3.scaleBand().domain(years).range([0,svgBounds["width"]])
+        // .padding(.2) <=- padding between bars
+        var xScale = d3.scaleBand()
+          .domain(years)
+          .range([0, svgBounds["width"] - xAxisWidth])
+          .padding(.05);
+
+        var yScale = d3.scaleLinear()
+          .domain([0,d3.max(data)])
+          .range([svgBounds["height"] - yAxisHeight,0])
+          .nice();
+
+        var xAxis = d3.axisBottom(xScale)
+          .ticks(allWorldCupData.length)
+          .tickValues(years)
+          .tickFormat(d3.format("0000")).ticks(years.length);
+
+
+        var yAxis = d3.axisLeft(yScale);
+          /*.ticks(10)
+          .tickValues(data);*/
+
+        // Create colorScale
+        var colorScale = d3.scaleLinear()
+          .domain([d3.min(data), d3.max(data)])
+          .range(["lightblue", "blue", "darkblue"]);
+
+        // Create the axes (hint: use #xAxis and #yAxis)
+        var horizontal = d3.select("#xAxis")
+          .attr("transform", "translate(70, 350)")
+          .call(xAxis)
+          .selectAll("text")
+          .attr("y", 0)
+          .attr("x", 9)
+          .attr("dy", ".35em")
+          .attr("transform", "rotate(90)")
+          .style("text-anchor", "start");;
+
+
+        var vertical = d3.select("#yAxis")
+          .attr("transform", "translate(70,20)")
+          .transition().duration(2500)
+          .call(yAxis);
+
+        // Create the bars (hint: use #bars)
+        var g = d3.select("#bars");
+        var bars = g.selectAll("rect")
+          .data(orderedCupData);
+
+        var prevBar;
+        var prevBarData;
+        bars.enter().append("rect").classed("bars",true)
+          .attr("x", function(d,i){
+            return xScale(years[i]) + padding;
+          })
+          .attr("y", function(d, i){
+            return yScale(data[i]);
+          })
+          .attr("width", 17)
+          .merge(bars)
+          .on("click", function(d,i){
+            d3.select(".bars-active").attr("class", "bars");
+            d3.select(this).attr("class", "bars-active");
+            updateInfo(d);
+            console.log("Year: " + years[i] + ", Value: " + data[i]);
+          })
+          .attr("transform", "translate(70, 20)")
+          .transition().duration(2500)
+          .attr("x", function (d, i) {
+              return xScale(years[i]) + padding;
+          })
+          .attr("y", function (d, i) {
+              return yScale(data[i]);
+              //svgBounds["width"] / allWorldCupData.length;
+          })
+          .attr("width", 17)
+          .attr("height", function(d,i){
+              return svgBounds["height"] - yScale(data[i]) - yAxisHeight;
+          })
+          .attr("fill", function (d,i) {
+              return colorScale(data[i]);
+          });
 }
 
 /**
@@ -27,6 +127,9 @@ function chooseData() {
 
   // ******* TODO: PART I *******
   // Copy over your HW2 code here
+  var selected = document.getElementById('dataset');
+  updateBarChart(selected.options[selected.selectedIndex].value);
+
 
 }
 
@@ -44,6 +147,18 @@ function updateInfo(oneWorldCup) {
 
     // Hint: For the list of teams, you can create an list element for each team.
     // Hint: Select the appropriate ids to update the text content.
+
+    d3.select("#edition").text(oneWorldCup.EDITION);
+    d3.select("#host").text(oneWorldCup.host);
+    d3.select("#winner").text(oneWorldCup.winner);
+    d3.select("#silver").text(oneWorldCup.runner_up);
+    var teams = d3.select("#teams");
+    teams.selectAll("li").remove();
+    oneWorldCup.teams_names.forEach(function(team_name){
+      teams.append("li").text(team_name);
+    });
+
+    updateMap(oneWorldCup);
 
 
 }
@@ -71,6 +186,24 @@ function drawMap(world) {
     // Make sure and give your paths the appropriate class (see the .css selectors at
     // the top of the provided html file)
 
+    console.log(world);
+    var path = d3.geoPath().projection(projection);
+    var map = d3.select("#map");//.append("svg").attr("width",900).attr("height",600);
+      //map.data(world.arcs).enter().append("path").attr("d",path);
+
+    d3.json("data/world.json", function(error, world){
+      console.log(world.objects);
+
+      map.selectAll("path")
+        .data(topojson.feature(world, world.objects.countries).features)
+        .enter()
+        .append("path")
+        .attr("d", path)
+        .attr("id", function(d,i){
+          return d.id;
+        })
+        .classed("countries", true);
+    });
 
 }
 
@@ -82,6 +215,10 @@ function clearMap() {
     // ******* TODO: PART IV*******
     //Clear the map of any colors/markers; You can do this with inline styling or by
     //defining a class style in styles.css
+    d3.selectAll(".host-map").attr("class", "countries");
+    d3.selectAll(".team-map").attr("class", "countries");
+    d3.selectAll(".gold-map").remove();
+    d3.selectAll(".silver-map").remove();
 
     //Hint: If you followed our suggestion of using classes to style
     //the colors and markers for hosts/teams/winners, you can use
@@ -106,6 +243,47 @@ function updateMap(worldcupData) {
     //Hint: remember we have a conveniently labeled class called .winner
     // as well as a .silver. These have styling attributes for the two
     //markers.
+    console.log(worldcupData);
+    var hostCode = worldcupData.host_country_code;
+    var runnerUpPos = worldcupData.ru_pos;
+    var winnerPos = worldcupData.win_pos;
+    var teams = worldcupData.teams_iso;
+
+    teams.forEach(function(team){
+      d3.select("#" + team).attr("class", "team-map");
+    })
+
+    d3.select("#" + hostCode).attr("class", "host-map");
+
+    console.log(winnerPos[0] + "hi");
+    var points = d3.select("#points");
+    var winner = [{long: winnerPos[0], lat: winnerPos[1]}];
+
+    points.selectAll(".gold-map")
+        .data(winner)
+        .enter()
+        .append("circle")
+        .attr('class','gold-map')
+        .attr('cx', 0)
+        .attr('cy', 0)
+        .attr('r', 10)
+        .attr("transform", function(d) {
+          return "translate(" + projection([d.long,d.lat]) + ")";
+        });
+
+    var runnerUp = [{long: runnerUpPos[0], lat: runnerUpPos[1]}];
+
+    points.selectAll(".silver-map")
+        .data(runnerUp)
+        .enter()
+        .append("circle")
+        .attr('class','silver-map')
+        .attr('cx', 0)
+        .attr('cy', 0)
+        .attr('r', 10)
+        .attr("transform", function(d) {
+          return "translate(" + projection([d.long,d.lat]) + ")";
+        });
 
 
     //Select the host country and change it's color accordingly.

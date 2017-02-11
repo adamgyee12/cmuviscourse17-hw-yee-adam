@@ -7,6 +7,15 @@
     <link rel="stylesheet" href="styles.css"/>
     <script src="https://d3js.org/d3.v4.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/1.6.19/topojson.min.js"></script>
+    <style>
+      .bars:hover {
+        fill:red;
+        transition: fill .1s ease;
+      }
+      .bars-active {
+        fill:red;
+      }
+    </style>
 </head>
 
 <body>
@@ -14,7 +23,7 @@
 <header>
     <img src="assets/fifa_russia_logo.png" alt="Fifa WC Russia Logo" id="logo"/>
     <h1>Exploring FIFA World Cup Statistics: Homework 3</h1>
-    <div>Name: YOURNAME; E-Mail: YOUREMAIL</div>
+    <div>Name: Adam Yee; E-Mail: adamy@andrew.cmu.edu</div>
 </header>
 
 <div id="details" class="view">

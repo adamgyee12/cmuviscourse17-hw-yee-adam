@@ -1,7 +1,13 @@
+path {
+    fill: none;
+    stroke: darkgray;
+    stroke-width: 2px;
+}
 
 .countries {
-    stroke: #f7f7f7;
+    stroke: black;
     fill: #d9d9d9;
+    stroke-width: 1px;
 }
 
 .legend-element {
@@ -11,6 +17,14 @@
 
 .team {
     fill: #fee8c8;
+    stroke-width: 1px;
+    stroke: black;
+}
+
+.team-map {
+    fill: #fee8c8;
+    stroke-width: 1px;
+    stroke: black;
 }
 
 .team-html {
@@ -19,6 +33,14 @@
 
 .host {
     fill: #2b8cbe;
+    stroke-width: 1px;
+    stroke: black;
+}
+
+.host-map {
+    fill: #2b8cbe;
+    stroke-width: 1px;
+    stroke: black;
 }
 
 .gold {
@@ -28,7 +50,25 @@
     stroke-width: 2px;
 }
 
+.gold-map {
+    fill: #FFD700;
+    opacity: .8;
+    stroke: #252525;
+    stroke-width: 2px;
+}
+
+.empty {
+  fill: none;
+  opacity: 1;
+}
+
 .silver {
+    fill: #d9d9d9;
+    opacity: .8;
+    stroke: #252525;
+}
+
+.silver-map {
     fill: #d9d9d9;
     opacity: .8;
     stroke: #252525;
