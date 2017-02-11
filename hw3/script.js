@@ -1,7 +1,6 @@
 // Global var for FIFA world cup data
 var allWorldCupData;
 
-
 /**
  * Render and update the bar chart based on the selection of the data type in the drop-down box
  *
@@ -263,6 +262,7 @@ function updateMap(worldcupData) {
         .data(winner)
         .enter()
         .append("circle")
+        .transition().duration(2500)
         .attr('class','gold-map')
         .attr('cx', 0)
         .attr('cy', 0)
@@ -277,6 +277,7 @@ function updateMap(worldcupData) {
         .data(runnerUp)
         .enter()
         .append("circle")
+        .transition().duration(2500)
         .attr('class','silver-map')
         .attr('cx', 0)
         .attr('cy', 0)
