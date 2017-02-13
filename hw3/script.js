@@ -190,19 +190,19 @@ function drawMap(world) {
     var map = d3.select("#map");//.append("svg").attr("width",900).attr("height",600);
       //map.data(world.arcs).enter().append("path").attr("d",path);
 
-    d3.json("data/world.json", function(error, world){
-      console.log(world.objects);
+    map.append("path")
+    .classed("graticule", true)
+    .attr("d", path(d3.geoGraticule10()));
 
-      map.selectAll("path")
-        .data(topojson.feature(world, world.objects.countries).features)
-        .enter()
-        .append("path")
-        .attr("d", path)
-        .attr("id", function(d,i){
-          return d.id;
-        })
-        .classed("countries", true);
-    });
+    map.selectAll("path")
+      .data(topojson.feature(world, world.objects.countries).features)
+      .enter()
+      .append("path")
+      .attr("d", path)
+      .attr("id", function(d,i){
+        return d.id;
+      })
+      .classed("countries", true);
 
 }
 
@@ -262,7 +262,11 @@ function updateMap(worldcupData) {
         .data(winner)
         .enter()
         .append("circle")
-        .transition().duration(2500)
+        .attr("transform", function(d) {
+          return "translate(" + projection([d.long,d.lat]) + ")";
+        })
+        .attr('r', 0)
+        .transition().duration(3000).ease(d3.easeBounce)
         .attr('class','gold-map')
         .attr('cx', 0)
         .attr('cy', 0)
@@ -277,7 +281,11 @@ function updateMap(worldcupData) {
         .data(runnerUp)
         .enter()
         .append("circle")
-        .transition().duration(2500)
+        .attr("transform", function(d) {
+          return "translate(" + projection([d.long,d.lat]) + ")";
+        })
+        .attr('r', 0)
+        .transition().duration(3000).ease(d3.easeBounce)
         .attr('class','silver-map')
         .attr('cx', 0)
         .attr('cy', 0)
