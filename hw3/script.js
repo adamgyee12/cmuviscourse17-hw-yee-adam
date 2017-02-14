@@ -185,7 +185,7 @@ function drawMap(world) {
     // Make sure and give your paths the appropriate class (see the .css selectors at
     // the top of the provided html file)
 
-    console.log(world);
+    //console.log(world);
     var path = d3.geoPath().projection(projection);
     var map = d3.select("#map");//.append("svg").attr("width",900).attr("height",600);
       //map.data(world.arcs).enter().append("path").attr("d",path);
@@ -201,6 +201,25 @@ function drawMap(world) {
       .attr("d", path)
       .attr("id", function(d,i){
         return d.id;
+      })
+      .on("click", function(d,i){
+
+        d3.select("#country_name").text(d.id);
+        var years_played = d3.select("#cups");
+        years_played.selectAll("li").remove();
+
+        for (var i = 0; i < allWorldCupData.length; i++){
+          var individual_year = allWorldCupData[i];
+
+          for (var j = 0; j < individual_year.teams_iso.length; j++){
+            var year = individual_year.teams_iso[j];
+
+            if (year.includes(d.id)){
+              years_played.append("li").text(individual_year.year);
+            }
+          }
+        }
+
       })
       .classed("countries", true);
 
@@ -242,7 +261,7 @@ function updateMap(worldcupData) {
     //Hint: remember we have a conveniently labeled class called .winner
     // as well as a .silver. These have styling attributes for the two
     //markers.
-    console.log(worldcupData);
+    //console.log(worldcupData);
     var hostCode = worldcupData.host_country_code;
     var runnerUpPos = worldcupData.ru_pos;
     var winnerPos = worldcupData.win_pos;
@@ -254,7 +273,7 @@ function updateMap(worldcupData) {
 
     d3.select("#" + hostCode).attr("class", "host-map");
 
-    console.log(winnerPos[0] + "hi");
+    //console.log(winnerPos[0] + "hi");
     var points = d3.select("#points");
     var winner = [{long: winnerPos[0], lat: winnerPos[1]}];
 

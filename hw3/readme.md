@@ -1,3 +1,7 @@
+#Extra Credit
+I implemented the ability to have countries be clicked on, which updates a new section with all the World Cups that country has participated in.
+
+
 #Visualization in HCI Homework 3
 *Due: Wednesday, February 15, 12:00pm (noon).*
 
