@@ -126,20 +126,15 @@ function updateTable() {
     updateList(i);
   })
   .data(tableElements);
+  trs.enter().append("tr").merge(trs);
 
-  console.log(tableElements);
-  trs.enter().append("tr").merge(trs);//.merge(trs);
-
-  trs.exit().remove();
-
+  // Clear all tds before adding in new data
   trs.selectAll("td").remove();
 
   var tds = trs.selectAll("td")
     .data(function(d){
-      //console.log(d.value);
-      //console.log(d.key);
 
-      data_columns = [];
+      var data_columns = [];
 
       if (d.value.type == "aggregate") {
         // Team name
@@ -158,20 +153,20 @@ function updateTable() {
         // Game opponent Name
         data_columns.push({"type":d.value.type, "vis":"text", "value":d.key});
         // Goals
-        data_columns.push({"type":d.value.type, "vis":"goals", "value":{"Goals Conceded":d.value["Goals Conceded"], "Goals Made":d.value["Goals Made"]}});
+        data_columns.push({"type":d.value.type, "vis":"goals", "value":{"Delta Goals":d.value["Goals Made"] - d.value["Goals Conceded"], "Goals Conceded":d.value["Goals Conceded"], "Goals Made":d.value["Goals Made"]}});
         // Result
         data_columns.push({"type":d.value.type, "vis":"text", "value":d.value.Result.label});
+        // Wins
+        data_columns.push({"type":d.value.type, "vis":"bar", "value":0});
+        // Losses
+        data_columns.push({"type":d.value.type, "vis":"bar", "value":0});
+        // Total Games
+        data_columns.push({"type":d.value.type, "vis":"bar", "value":0});
       }
-
       return data_columns;
-      //return {"type": "aggregate", "vis": 2, "value": 3}; // Aggregate is being hard coded atm
     })
     .enter().append("td");
 
-
-    tds.merge(tds).transition().duration(2500);
-
-    tds.exit().remove();
     // Use <td> associated data to alter the cells
     // Team Name / Result
     tds.filter(function(d) {
@@ -218,7 +213,7 @@ function updateTable() {
     })
     .append("rect").classed("goalBar", true) // Adding delta bar
     .attr("height", function(d){
-      return 5;
+      return (d.type == "aggregate") ? 10 : 5;
     })
     .attr("width", function(d){
       //console.log(d.value["Delta Goals"]);
@@ -231,7 +226,7 @@ function updateTable() {
       //return goalScale(0);
     })
     .attr("y", function(d){
-      return (cellHeight / 2 - (5 / 2));
+      return (d.type == "aggregate") ? (cellHeight / 2 - (10 / 2)) : (cellHeight / 2 - (5 / 2));
     })
     .attr("fill", function(d) {
       if (d.value["Delta Goals"] < 0){
@@ -254,7 +249,12 @@ function updateTable() {
       return (cellHeight / 2);
     })
     .attr("r", 5)
-    .attr("fill", "red");
+    .attr("fill", function(d){
+      return (d.type == "aggregate") ? "red" : "white";
+    })
+    .attr("style", function(d){
+      return (d.type == "aggregate") ? "" : "stroke:red; stroke-width:1";
+    });
 
     // Goals Made
     tds.filter(function (d) {
@@ -271,9 +271,16 @@ function updateTable() {
     .attr("r", 5)
     .attr("fill", function(d){
       if (d.value["Delta Goals"] == 0){
-        return "gray";
+        return (d.type == "aggregate") ? "grey" : "white";
       } else {
-        return "blue";
+        return (d.type == "aggregate") ? "blue" : "white";
+      }
+    })
+    .attr("style", function(d){
+      if (d.value["Delta Goals"] == 0){
+        return (d.type == "aggregate") ? "" : "stroke:grey; stroke-width:1";
+      } else {
+        return (d.type == "aggregate") ? "" : "stroke:blue; stroke-width:1";
       }
     });
 
