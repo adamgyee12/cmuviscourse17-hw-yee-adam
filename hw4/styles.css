@@ -5,6 +5,14 @@ table {
     /*width: 720px;*/
 }
 
+.tb_row {
+
+}
+
+.tb_col {
+
+}
+
 th {
     font-weight: normal;
     text-align: right;
@@ -44,13 +52,14 @@ tbody tr:hover {
     background-color: #dbdbdb;
 }
 
+
 tbody tr .game {
-    background-color: #f0f0f0;
+    background-color: white;
 }
 
-/*tbody tr .game:hover {*/
-    /*background-color: #dbdbdb;*/
-/*}*/
+tbody tr .game:hover {
+    background-color: #dbdbdb;
+}
 
 .label{
     fill: #ffffff;
@@ -151,5 +160,3 @@ header {
     padding: 0.5em;
     float: left;
 }
-
-

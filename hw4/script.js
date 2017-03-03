@@ -50,7 +50,7 @@ var rank = {
 
 d3.json('data/fifa-matches.json',function(error,data){
     teamData = data;
-    console.log(teamData);
+    //console.log(teamData);
 
     createTable();
     updateTable();
@@ -95,19 +95,9 @@ function createTable() {
   tableElements = teamData;
 
   // Add <table rows> for each element in tableElements
-  var trs = d3.select("tbody").selectAll("tr")
-    .data(tableElements).enter().append("tr");
+  var trs = d3.select("tbody").selectAll(".tb_row")
+    .data(tableElements).enter().append("tr").classed("tb_row", true);
 
-/*
-  trs.each(function(d) {
-    var td = d3.select(this).selectAll("td")
-      .data(function(d){
-        console.log(d);
-        return [1,2,3];
-      });
-    //console.log(this);
-  });
-*/
 
 // ******* TODO: PART V (Extra Credit) *******
 
@@ -119,30 +109,32 @@ function createTable() {
  */
 function updateTable() {
 
+  console.log(tableElements);
+  //d3.selectAll(".tb_row").remove();
 // ******* TODO: PART III *******
   //d3.selectAll(".tbl_el").remove();
-  var trs = d3.select("tbody").selectAll("tr")
+  var trs = d3.select("tbody").selectAll(".tb_row")
   .on("click", function(d,i){ // SHOULD ONLY BE ABLE TO CLICK ON NAME OF COUNTRY TO EXPAND
     updateList(i);
   })
   .data(tableElements);
-  trs.enter().append("tr").merge(trs);
+  trs.enter().append("tr").classed("tb_row", true).merge(trs);
 
   // Clear all tds before adding in new data
-  trs.selectAll("td").remove();
+  d3.select("tbody").selectAll("td").remove();
 
   var tds = trs.selectAll("td")
     .data(function(d){
 
-      var data_columns = [];
+      data_columns = [];
 
       if (d.value.type == "aggregate") {
         // Team name
-        data_columns.push({"type":d.value.type, "vis":"text", "value":d.key});
+        data_columns.push({"type":d.value.type, "vis":"name", "value":d.key});
         // Goals
         data_columns.push({"type":d.value.type, "vis":"goals", "value":{"Delta Goals":d.value["Delta Goals"], "Goals Conceded":d.value["Goals Conceded"], "Goals Made":d.value["Goals Made"]}});
         // Result
-        data_columns.push({"type":d.value.type, "vis":"text", "value":d.value.Result.label});
+        data_columns.push({"type":d.value.type, "vis":"result", "value":d.value.Result.label});
         // Wins
         data_columns.push({"type":d.value.type, "vis":"bar", "value":d.value.Wins});
         // Losses
@@ -151,11 +143,11 @@ function updateTable() {
         data_columns.push({"type":d.value.type, "vis":"bar", "value":d.value.TotalGames});
       } else {
         // Game opponent Name
-        data_columns.push({"type":d.value.type, "vis":"text", "value":d.key});
+        data_columns.push({"type":d.value.type, "vis":"name", "value":d.key});
         // Goals
         data_columns.push({"type":d.value.type, "vis":"goals", "value":{"Delta Goals":d.value["Goals Made"] - d.value["Goals Conceded"], "Goals Conceded":d.value["Goals Conceded"], "Goals Made":d.value["Goals Made"]}});
         // Result
-        data_columns.push({"type":d.value.type, "vis":"text", "value":d.value.Result.label});
+        data_columns.push({"type":d.value.type, "vis":"result", "value":d.value.Result.label});
         // Wins
         data_columns.push({"type":d.value.type, "vis":"bar", "value":0});
         // Losses
@@ -167,16 +159,48 @@ function updateTable() {
     })
     .enter().append("td");
 
+    tds.merge(tds);
+    tds.exit().remove();
+
+    console.log(tds);
+
     // Use <td> associated data to alter the cells
-    // Team Name / Result
+
+    // ***************
+    // Team Names
+    // ***************
+
     tds.filter(function(d) {
-      return d.vis == 'text'
+      return d.vis == 'name'
+    })
+    .classed("game", function(d){
+      return (d.type == "aggregate") ? false : true;
+    })
+    .classed("aggregate", function(d){
+      return (d.type == "aggregate") ? true : false;
+    })
+    .text(function(d){
+      return (d.type == "aggregate") ? d.value : "x"+d.value;
+    })
+    .style("fill", function(d){
+      return (d.type == "aggregate") ? "" : "white";
+    });
+
+    // ***************
+    // Team Result
+    // ***************
+
+    tds.filter(function(d) {
+      return d.vis == 'result'
     })
     .text(function(d){
       return d.value;
     });
 
+    // ***************
     // Wins / Losses / Total Games
+    // ***************
+
     tds.filter(function (d) {
       return d.vis == 'bar'
     })
@@ -199,7 +223,10 @@ function updateTable() {
     .attr("text-anchor", "middle")
     .attr("x", 10).attr("y", 10);
 
+    // ***************
     // Delta Goals
+    // ***************
+
     tds.filter(function (d) {
       return d.vis == 'goals'
     })
@@ -213,30 +240,25 @@ function updateTable() {
     })
     .append("rect").classed("goalBar", true) // Adding delta bar
     .attr("height", function(d){
-      return (d.type == "aggregate") ? 10 : 5;
+      return (d.type == "aggregate") ? 10 : 5; // If aggregate, we want a thicker delta line
     })
     .attr("width", function(d){
-      //console.log(d.value["Delta Goals"]);
       return goalScale(Math.abs(d.value["Delta Goals"])) - goalScale(0);
     })
     .attr("x", function(d){ // Start rectangle at the min of goals conceded and goals made
-      //console.log(d3.min([d.value["Goals Conceded"], d.value["Goals Made"]]));
       return goalScale(d3.min([d.value["Goals Conceded"], d.value["Goals Made"]]));
-      //console.log(goalScale(11));
-      //return goalScale(0);
     })
     .attr("y", function(d){
-      return (d.type == "aggregate") ? (cellHeight / 2 - (10 / 2)) : (cellHeight / 2 - (5 / 2));
+      return (d.type == "aggregate") ? (cellHeight / 2 - (10 / 2)) : (cellHeight / 2 - (5 / 2)); // If aggregate, we want a thicker delta line
     })
     .attr("fill", function(d) {
-      if (d.value["Delta Goals"] < 0){
-        return "red";
-      } else {
-        return "blue";
-      }
-    })
+      return (d.value["Delta Goals"] < 0) ? "red" : "blue";
+    });
 
+    // ***************
     // Goals Conceded
+    // ***************
+
     tds.filter(function (d) {
       return d.vis == 'goals'
     })
@@ -256,7 +278,10 @@ function updateTable() {
       return (d.type == "aggregate") ? "" : "stroke:red; stroke-width:1";
     });
 
+    // ***************
     // Goals Made
+    // ***************
+
     tds.filter(function (d) {
       return d.vis == 'goals'
     })
@@ -283,7 +308,6 @@ function updateTable() {
         return (d.type == "aggregate") ? "" : "stroke:blue; stroke-width:1";
       }
     });
-
 };
 
 
@@ -294,7 +318,11 @@ function updateTable() {
 function collapseList() {
 
     // ******* TODO: PART IV *******
-
+    /*
+    tableElements.forEach(function(element){
+      console.log(element);
+    });
+    */
 
 }
 
@@ -307,39 +335,60 @@ function updateList(i) {
     // ******* TODO: PART IV *******
     console.log(i);
 
+    // Handle game click
     if (tableElements[i].value.type != "aggregate"){
-      console.log("you clicked on a game");
+      console.log("you clicked on a game!");
       return;
     }
 
-    // Handle cases
+    var games = tableElements[i].value.games;
+
+    if (i == tableElements.length - 1){
+      for (var j = 0; j < games.length; j++){
+        //console.log(games[j]);
+        tableElements.splice(i+j+1, 0, games[j]);
+        updateTable();
+      }
+    } else {
+      if (tableElements[i+1].value.type == "game"){
+        tableElements.splice(i+1, games.length);
+        console.log("collapsing");
+        d3.selectAll(".tb_row").remove();
+        updateTable();
+      } else {
+        for (var j = 0; j < games.length; j++){
+          //console.log(games[j]);
+          tableElements.splice(i+j+1, 0, games[j]);
+          updateTable();
+        }
+      }
+    }
+
+    /*
+
+    // Handle collapse list
+    if (i+1 < tableElements.length){
+      if (tableElements[i+1].value.type == "game"){
+        tableElements.splice(i+1, games.length);
+        console.log("collapsing");
+        d3.selectAll(".tb_row").remove();
+
+        updateTable();
+        updateTable();
+        return;
+      }
+    }
 
     // Add games to tableElements (how to get this game data?)
-    var games = teamData[i].value.games;
+
     //console.log(games);
     //tableElements = tableElements.concat(games);
-    for (var j = games.length-1; j > 0; j--){
+    for (var j = 0; j < games.length; j++){
       //console.log(games[j]);
-      tableElements.splice(i+1, 0, games[j]);
+      tableElements.splice(i+j+1, 0, games[j]);
+      updateTable();
     }
-/*
-    console.log(firstHalf);
-    console.log(secondHalf);
-    firstHalf.splice(i,0,games);
-    firstHalf.concat(secondHalf);
-
-    tableElements = firstHalf;
-    console.log(tableElements);
-    //console.log(tableElements);
     */
-    //console.log(tableElements);
-
-    /*games.forEach(function(game){
-      tableElements.in
-      console.log(game);
-    });*/
-    //console.log(teamData[i].value.games);
-
     // updateTable
     updateTable();
 
