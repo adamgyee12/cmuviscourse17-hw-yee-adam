@@ -114,9 +114,7 @@ function updateTable() {
 // ******* TODO: PART III *******
   //d3.selectAll(".tbl_el").remove();
   var trs = d3.select("tbody").selectAll(".tb_row")
-  .on("click", function(d,i){ // SHOULD ONLY BE ABLE TO CLICK ON NAME OF COUNTRY TO EXPAND
-    updateList(i);
-  })
+
   .on("mouseover", function(d){
     updateTree(d);
   })
@@ -130,13 +128,13 @@ function updateTable() {
   d3.select("tbody").selectAll("td").remove();
 
   var tds = trs.selectAll("td")
-    .data(function(d){
+    .data(function(d, i){
 
       data_columns = [];
 
       if (d.value.type == "aggregate") {
         // Team name
-        data_columns.push({"type":d.value.type, "vis":"name", "value":d.key});
+        data_columns.push({"type":d.value.type, "vis":"name", "value":{"key":d.key, "pos":i}});
         // Goals
         data_columns.push({"type":d.value.type, "vis":"goals", "value":{"Delta Goals":d.value["Delta Goals"], "Goals Conceded":d.value["Goals Conceded"], "Goals Made":d.value["Goals Made"]}});
         // Result
@@ -149,7 +147,7 @@ function updateTable() {
         data_columns.push({"type":d.value.type, "vis":"bar", "value":d.value.TotalGames});
       } else {
         // Game opponent Name
-        data_columns.push({"type":d.value.type, "vis":"name", "value":d.key});
+        data_columns.push({"type":d.value.type, "vis":"name", "value":{"key":d.key, "pos":i}});
         // Goals
         data_columns.push({"type":d.value.type, "vis":"goals", "value":{"Delta Goals":d.value["Goals Made"] - d.value["Goals Conceded"], "Goals Conceded":d.value["Goals Conceded"], "Goals Made":d.value["Goals Made"]}});
         // Result
@@ -179,6 +177,10 @@ function updateTable() {
     tds.filter(function(d) {
       return d.vis == 'name'
     })
+    .on("click", function(d,i){ // SHOULD ONLY BE ABLE TO CLICK ON NAME OF COUNTRY TO EXPAND
+      console.log(d);
+      updateList(d.value.pos);
+    })
     .classed("game", function(d){
       return (d.type == "aggregate") ? false : true;
     })
@@ -186,7 +188,7 @@ function updateTable() {
       return (d.type == "aggregate") ? true : false;
     })
     .text(function(d){
-      return (d.type == "aggregate") ? d.value : "x"+d.value;
+      return (d.type == "aggregate") ? d.value.key : "x"+d.value.key;
     })
     .style("fill", function(d){
       return (d.type == "aggregate") ? "" : "white";
@@ -509,23 +511,6 @@ function updateTree(row) {
     d3.selectAll(".link").filter(function(d) {
       return this.id.includes(teamName) && this.id.includes(opponentName);
     }).attr("style", "stroke:red; stroke-width:10");
-  }
-
-  // Highlight path for game
-  if (row.value.type == "game"){
-    var opponentName = row.value.Opponent;
-    var links = d3.selectAll(".link");
-    links.each(function(link){
-
-      if (link.data.data.Team == teamName){
-
-        if (link.data.data.Team == link.parent.data.data.Team){
-          console.log(link.data.data.Team  + ", " + link.parent.data.data.Team);
-
-          d3.selectAll("#" + link.data.data.Team + "Won").attr("style", "stroke:red; stroke-width:10");
-        }
-      }
-    });
   }
 
 }
