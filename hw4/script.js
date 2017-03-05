@@ -109,13 +109,19 @@ function createTable() {
  */
 function updateTable() {
 
-  console.log(tableElements);
+  //console.log(tableElements);
   //d3.selectAll(".tb_row").remove();
 // ******* TODO: PART III *******
   //d3.selectAll(".tbl_el").remove();
   var trs = d3.select("tbody").selectAll(".tb_row")
   .on("click", function(d,i){ // SHOULD ONLY BE ABLE TO CLICK ON NAME OF COUNTRY TO EXPAND
     updateList(i);
+  })
+  .on("mouseover", function(d){
+    updateTree(d);
+  })
+  .on("mouseout", function(d){
+    clearTree();
   })
   .data(tableElements);
   trs.enter().append("tr").classed("tb_row", true).merge(trs);
@@ -162,7 +168,7 @@ function updateTable() {
     tds.merge(tds);
     tds.exit().remove();
 
-    console.log(tds);
+    //console.log(tds);
 
     // Use <td> associated data to alter the cells
 
@@ -333,7 +339,7 @@ function collapseList() {
 function updateList(i) {
 
     // ******* TODO: PART IV *******
-    console.log(i);
+    //console.log(i);
 
     // Handle game click
     if (tableElements[i].value.type != "aggregate"){
@@ -352,7 +358,7 @@ function updateList(i) {
     } else {
       if (tableElements[i+1].value.type == "game"){
         tableElements.splice(i+1, games.length);
-        console.log("collapsing");
+        //console.log("collapsing");
         d3.selectAll(".tb_row").remove();
         updateTable();
       } else {
@@ -401,8 +407,76 @@ function updateList(i) {
  */
 function createTree(treeData) {
 
-    // ******* TODO: PART VI *******
+  // ******* TODO: PART VI *******
+  //console.log(treeData);
+  //delete treeData.columns.remove();
+  //console.log(treeData);
 
+  var hierarchyData =  d3.stratify()
+    .id(function(d) { return d.id; })
+    .parentId(function(d) { return (treeData[d.ParentGame]) ? treeData[d.ParentGame].id : null; })
+    (treeData);
+
+  var treemap = d3.tree()
+    .size([900 , 300]); // Should be able to get this from a variable
+
+  var nodes = d3.hierarchy(hierarchyData, function(d) {
+    //console.log(d);
+    return d.children;
+  });
+
+  nodes = treemap(nodes);
+
+  var treeArea = d3.select("#tree");
+
+  // adds the links between the nodes
+  var link = treeArea.selectAll(".link")
+      .data( nodes.descendants().slice(1))
+    .enter().append("path").attr("transform", "translate(100,0)")
+      .attr("class", "link")
+      .attr("id", function(d){
+        console.log(d);
+
+        var teamResult = (d.data.data.Wins == "1") ? "Won" : "Lost";
+        var opponentResult = (d.data.data.Wins == "0") ? "Won" : "Lost";
+        return d.data.data.Team + teamResult + d.data.data.Opponent + opponentResult;
+      })
+      .attr("d", function(d) {
+         return "M" + d.y + "," + d.x
+           + "C" + (d.y + d.parent.y) / 2 + "," + d.x
+           + " " + (d.y + d.parent.y) / 2 + "," + d.parent.x
+           + " " + d.parent.y + "," + d.parent.x;
+         });
+
+  // adds each node as a group
+  var node = treeArea.selectAll(".node")
+      .data(nodes.descendants())
+    .enter().append("g").attr("transform", "translate(100,0)")
+      .attr("class", function(d) {
+        return "node" +
+          (d.children ? " node--internal" : " node--leaf"); })
+      .attr("transform", function(d) {
+        return "translate(" + d.y + "," + d.x + ")"; });
+
+  // adds the circle to the node
+  node.append("circle").attr("transform", "translate(100,0)")
+    .attr("r", 5)
+    //.classed("")
+    .attr("style", function(d){
+      //console.log(d.data);
+      return (d.data.data.Wins == 1) ? "fill:blue" : "fill:red";
+    });
+
+  // adds the text to the node
+  node.append("text").attr("transform", "translate(100,0)")
+    .attr("dy", ".35em")
+    .attr("x", function(d) { return d.children ? -13 : 13; })
+    .style("text-anchor", function(d) {
+      return d.children ? "end" : "start"; })
+    .text(function(d) { return d.data.data.Team; });
+
+
+  //console.log(root);
 
 };
 
@@ -414,8 +488,45 @@ function createTree(treeData) {
  */
 function updateTree(row) {
 
-    // ******* TODO: PART VII *******
+  // ******* TODO: PART VII *******
 
+  //console.log(row);
+
+  var teamName = row.key;
+  // Highlight entire path for team
+
+
+  if (row.value.type == "aggregate"){
+    //d3.selectAll("#" + teamName + "Won").attr("style", "stroke:red; stroke-width:10");
+    d3.selectAll(".link").filter(function(d) {
+      return this.id.startsWith(teamName + "Won");
+    }).attr("style", "stroke:red; stroke-width:10");
+  }
+
+  if (row.value.type == "game"){
+    var opponentName = row.value.Opponent;
+    //d3.selectAll("#" + teamName + "Won").attr("style", "stroke:red; stroke-width:10");
+    d3.selectAll(".link").filter(function(d) {
+      return this.id.includes(teamName) && this.id.includes(opponentName);
+    }).attr("style", "stroke:red; stroke-width:10");
+  }
+
+  // Highlight path for game
+  if (row.value.type == "game"){
+    var opponentName = row.value.Opponent;
+    var links = d3.selectAll(".link");
+    links.each(function(link){
+
+      if (link.data.data.Team == teamName){
+
+        if (link.data.data.Team == link.parent.data.data.Team){
+          console.log(link.data.data.Team  + ", " + link.parent.data.data.Team);
+
+          d3.selectAll("#" + link.data.data.Team + "Won").attr("style", "stroke:red; stroke-width:10");
+        }
+      }
+    });
+  }
 
 }
 
@@ -424,7 +535,8 @@ function updateTree(row) {
  */
 function clearTree() {
 
-    // ******* TODO: PART VII *******
+  // ******* TODO: PART VII *******
+  var links = d3.selectAll(".link").attr("style", "stroke:#555");
 
 
 }
