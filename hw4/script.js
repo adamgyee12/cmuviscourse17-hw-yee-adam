@@ -17,18 +17,15 @@ var goalsMadeHeader = 'Goals Made',
 
 /** Setup the scales*/
 var goalScale = d3.scaleLinear()
-    .domain([0, 18]) // shouldn't this come from a var?
-    .range([cellBuffer, 2 * cellWidth - cellBuffer])
+    .range([cellBuffer, 2 * cellWidth - cellBuffer]);
 
 /**Used for games/wins/losses*/
 var gameScale = d3.scaleLinear()
-    .domain([0,7]) // shouldn't this come from a var as well?
     .range([0, cellWidth - cellBuffer]);
 
 /**Color scales*/
 /**For aggregate columns*/
 var aggregateColorScale = d3.scaleLinear()
-    .domain([0,6]) // shouldn't this come from a var as well?
     .range(['#ece2f0', '#016450']);
 
 /**For goal Column*/
@@ -50,8 +47,6 @@ var rank = {
 
 d3.json('data/fifa-matches.json',function(error,data){
     teamData = data;
-    //console.log(teamData);
-
     createTable();
     updateTable();
 })
@@ -79,7 +74,21 @@ d3.csv("data/fifa-tree.csv", function (error, csvData) {
  */
 function createTable() {
 
-// ******* TODO: PART II *******
+  // Populate tableElements
+  tableElements = teamData;
+
+  // Update Domain for Scales
+  var maxGoals = d3.max(tableElements, function(d){
+    return d.value["Goals Made"];
+  });
+  goalScale.domain([0, maxGoals]);
+
+  var maxGames = d3.max(tableElements, function(d){
+    return d.value["TotalGames"];
+  });
+  gameScale.domain([0, maxGames]);
+
+  aggregateColorScale.domain([0, maxGames]);
 
   // Creating Axis for Goals Column
   var goalsAxis = d3.axisBottom(goalScale);
@@ -89,10 +98,7 @@ function createTable() {
       return cellWidth * 2;
     })
     .style("height", cellHeight)
-    .call(goalsAxis); // Needs some work to look prettier, but will do for now
-
-  // Populate tableElements
-  tableElements = teamData;
+    .call(goalsAxis);
 
   // Add <table rows> for each element in tableElements
   var trs = d3.select("tbody").selectAll(".tb_row")
@@ -109,12 +115,8 @@ function createTable() {
  */
 function updateTable() {
 
-  //console.log(tableElements);
-  //d3.selectAll(".tb_row").remove();
-// ******* TODO: PART III *******
-  //d3.selectAll(".tbl_el").remove();
+  // Add hover functionality
   var trs = d3.select("tbody").selectAll(".tb_row")
-
   .on("mouseover", function(d){
     updateTree(d);
   })
@@ -127,6 +129,7 @@ function updateTable() {
   // Clear all tds before adding in new data
   d3.select("tbody").selectAll("td").remove();
 
+  // Format data the way we want it
   var tds = trs.selectAll("td")
     .data(function(d, i){
 
@@ -166,10 +169,6 @@ function updateTable() {
     tds.merge(tds);
     tds.exit().remove();
 
-    //console.log(tds);
-
-    // Use <td> associated data to alter the cells
-
     // ***************
     // Team Names
     // ***************
@@ -177,8 +176,7 @@ function updateTable() {
     tds.filter(function(d) {
       return d.vis == 'name'
     })
-    .on("click", function(d,i){ // SHOULD ONLY BE ABLE TO CLICK ON NAME OF COUNTRY TO EXPAND
-      console.log(d);
+    .on("click", function(d,i){
       updateList(d.value.pos);
     })
     .classed("game", function(d){
@@ -209,27 +207,36 @@ function updateTable() {
     // Wins / Losses / Total Games
     // ***************
 
-    tds.filter(function (d) {
+    var svg = tds.filter(function (d) {
       return d.vis == 'bar'
     })
     .append("svg")
     .style("width", function(d){
       return (d.type == "aggregate") ? gameScale(d.value) : 0;
     })
-    .style("height", cellHeight)
-    .append("rect")
+    .style("height", cellHeight);
+
+    svg.append("rect")
     .style("height", cellHeight)
     .style("width", function(d){
       return (d.type == "aggregate") ? gameScale(d.value) : 0;
     })
     .attr("fill", function(d) {
       return (d.type == "aggregate") ? aggregateColorScale(d.value) : "none";
-    })
-    .append("text").text(function(d){ // Text is not showing up
-      return d.value;
+    });
+
+    svg.append("text").text(function(d){
+      if (d.value > 1){
+        return d.value;
+      } else {
+        return "";
+      }
     })
     .attr("text-anchor", "middle")
-    .attr("x", 10).attr("y", 10);
+    .attr("fill", "white")
+    .attr("x", function(d){
+      return gameScale(d.value) - 7;
+    }).attr("y", 15);
 
     // ***************
     // Delta Goals
@@ -326,11 +333,15 @@ function updateTable() {
 function collapseList() {
 
     // ******* TODO: PART IV *******
-    /*
-    tableElements.forEach(function(element){
-      console.log(element);
+    var holder = []
+    tableElements.forEach(function(d,i){
+      if (d.value.type == "game")
+        holder.push(i);
     });
-    */
+
+    holder.forEach(function(d){
+      tableElements.splice(d,1);
+    });
 
 }
 
@@ -341,7 +352,6 @@ function collapseList() {
 function updateList(i) {
 
     // ******* TODO: PART IV *******
-    //console.log(i);
 
     // Handle game click
     if (tableElements[i].value.type != "aggregate"){
@@ -351,55 +361,25 @@ function updateList(i) {
 
     var games = tableElements[i].value.games;
 
-    if (i == tableElements.length - 1){
+    if (i == tableElements.length - 1){ // Handle adding new elements
       for (var j = 0; j < games.length; j++){
-        //console.log(games[j]);
         tableElements.splice(i+j+1, 0, games[j]);
         updateTable();
       }
-    } else {
+    } else { // Handle collapsing elements
       if (tableElements[i+1].value.type == "game"){
         tableElements.splice(i+1, games.length);
-        //console.log("collapsing");
         d3.selectAll(".tb_row").remove();
         updateTable();
       } else {
         for (var j = 0; j < games.length; j++){
-          //console.log(games[j]);
           tableElements.splice(i+j+1, 0, games[j]);
           updateTable();
         }
       }
     }
 
-    /*
-
-    // Handle collapse list
-    if (i+1 < tableElements.length){
-      if (tableElements[i+1].value.type == "game"){
-        tableElements.splice(i+1, games.length);
-        console.log("collapsing");
-        d3.selectAll(".tb_row").remove();
-
-        updateTable();
-        updateTable();
-        return;
-      }
-    }
-
-    // Add games to tableElements (how to get this game data?)
-
-    //console.log(games);
-    //tableElements = tableElements.concat(games);
-    for (var j = 0; j < games.length; j++){
-      //console.log(games[j]);
-      tableElements.splice(i+j+1, 0, games[j]);
-      updateTable();
-    }
-    */
-    // updateTable
     updateTable();
-
 }
 
 /**
@@ -410,9 +390,6 @@ function updateList(i) {
 function createTree(treeData) {
 
   // ******* TODO: PART VI *******
-  //console.log(treeData);
-  //delete treeData.columns.remove();
-  //console.log(treeData);
 
   var hierarchyData =  d3.stratify()
     .id(function(d) { return d.id; })
@@ -423,7 +400,6 @@ function createTree(treeData) {
     .size([900 , 300]); // Should be able to get this from a variable
 
   var nodes = d3.hierarchy(hierarchyData, function(d) {
-    //console.log(d);
     return d.children;
   });
 
@@ -437,8 +413,6 @@ function createTree(treeData) {
     .enter().append("path").attr("transform", "translate(100,0)")
       .attr("class", "link")
       .attr("id", function(d){
-        console.log(d);
-
         var teamResult = (d.data.data.Wins == "1") ? "Won" : "Lost";
         var opponentResult = (d.data.data.Wins == "0") ? "Won" : "Lost";
         return d.data.data.Team + teamResult + d.data.data.Opponent + opponentResult;
@@ -463,9 +437,7 @@ function createTree(treeData) {
   // adds the circle to the node
   node.append("circle").attr("transform", "translate(100,0)")
     .attr("r", 5)
-    //.classed("")
     .attr("style", function(d){
-      //console.log(d.data);
       return (d.data.data.Wins == 1) ? "fill:blue" : "fill:red";
     });
 
@@ -476,10 +448,6 @@ function createTree(treeData) {
     .style("text-anchor", function(d) {
       return d.children ? "end" : "start"; })
     .text(function(d) { return d.data.data.Team; });
-
-
-  //console.log(root);
-
 };
 
 /**
@@ -492,22 +460,18 @@ function updateTree(row) {
 
   // ******* TODO: PART VII *******
 
-  //console.log(row);
-
   var teamName = row.key;
+
   // Highlight entire path for team
-
-
   if (row.value.type == "aggregate"){
-    //d3.selectAll("#" + teamName + "Won").attr("style", "stroke:red; stroke-width:10");
     d3.selectAll(".link").filter(function(d) {
       return this.id.startsWith(teamName + "Won");
     }).attr("style", "stroke:red; stroke-width:10");
   }
 
+  // Highlight game specific
   if (row.value.type == "game"){
     var opponentName = row.value.Opponent;
-    //d3.selectAll("#" + teamName + "Won").attr("style", "stroke:red; stroke-width:10");
     d3.selectAll(".link").filter(function(d) {
       return this.id.includes(teamName) && this.id.includes(opponentName);
     }).attr("style", "stroke:red; stroke-width:10");
@@ -522,6 +486,5 @@ function clearTree() {
 
   // ******* TODO: PART VII *******
   var links = d3.selectAll(".link").attr("style", "stroke:#555");
-
 
 }
