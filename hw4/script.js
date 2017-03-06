@@ -443,6 +443,12 @@ function createTree(treeData) {
 
   // adds the text to the node
   node.append("text").attr("transform", "translate(100,0)")
+    .attr("class", "node-text")
+    .attr("id", function(d){
+      var teamResult = (d.data.data.Wins == "1") ? "Won" : "Lost";
+      var opponentResult = (d.data.data.Wins == "0") ? "Won" : "Lost";
+      return d.data.data.Team + teamResult + d.data.data.Opponent + opponentResult;
+    })
     .attr("dy", ".35em")
     .attr("x", function(d) { return d.children ? -13 : 13; })
     .style("text-anchor", function(d) {
@@ -469,12 +475,28 @@ function updateTree(row) {
     }).attr("style", "stroke:red; stroke-width:10");
   }
 
+  if (row.value.type == "aggregate"){
+    d3.selectAll(".node-text").filter(function(d) {
+      return this.id.startsWith(teamName + "Won");
+    }).style("text-anchor", function(d) {
+      return d.children ? "end" : "start"; })
+      .attr("fill", "red");
+  }
+
   // Highlight game specific
   if (row.value.type == "game"){
     var opponentName = row.value.Opponent;
     d3.selectAll(".link").filter(function(d) {
       return this.id.includes(teamName) && this.id.includes(opponentName);
     }).attr("style", "stroke:red; stroke-width:10");
+  }
+
+  if (row.value.type == "game"){
+    d3.selectAll(".node-text").filter(function(d) {
+      return this.id.includes(teamName) && this.id.includes(opponentName);
+    }).style("text-anchor", function(d) {
+      return d.children ? "end" : "start"; })
+      .attr("fill", "red");
   }
 
 }
@@ -485,6 +507,9 @@ function updateTree(row) {
 function clearTree() {
 
   // ******* TODO: PART VII *******
-  var links = d3.selectAll(".link").attr("style", "stroke:#555");
+  d3.selectAll(".link").attr("style", "stroke:#555");
+  d3.selectAll(".node-text").style("text-anchor", function(d) {
+    return d.children ? "end" : "start"; })
+    .attr("fill", "#555");
 
 }
